@@ -460,8 +460,6 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
       op_name,
       rtol=1e-4,
   ):
-    if use_gpu and not test.is_gpu_available(cuda_only=True):
-      self.skipTest("GPU not available")
     expected_results = []
     computed_results = []
     expected, computed = self._ComputeReferenceDilatedConvParameters(
@@ -520,8 +518,6 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
                     gpu_only=False,
                     test_grappler_layout_optimizer=False,
                     tol=1e-5):
-    if gpu_only and not test.is_gpu_available(cuda_only=True):
-      return
     tensors = []
     dilations = list(dilations)
     for data_format, use_gpu, op_name in GetTestConfigs():
@@ -577,7 +573,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
       test_grappler_layout_optimizer=False,
       tol=1e-5,
   ):
-    if (gpu_only and not use_gpu) or not test.is_gpu_available(cuda_only=True):
+    if (gpu_only and not use_gpu): 
       self.skipTest("GPU not available")
     if (
         test_grappler_layout_optimizer or data_format != "NHWC"
@@ -1330,9 +1326,11 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
           results[0], results[1], atol=tol_to_use, rtol=tol_to_use)
 
   @test_util.run_in_graph_and_eager_modes
+  @test.disable_with_predicate(
+      pred=test.is_built_with_rocm,
+      skip_message='MIOpen does not support group conv yet!')
   def testConv2DGroupConvFwd(self):
-    self.skipTest("Need to Check why MIOpen complains")
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       data_formats = ["NHWC", "NCHW"]
     else:
       data_formats = ["NHWC"]
@@ -1348,8 +1346,13 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
                                      dtype=dtypes.float32)
 
   @test_util.deprecated_graph_mode_only
-  @test_util.run_cuda_only
+  @test.disable_with_predicate(
+      pred=test.is_built_with_rocm,
+      skip_message='MIOpen does not support group conv yet!')
   def testInputGradientGroupConv(self):
+    if not test.is_gpu_available():
+        self.skipTest("Test requires GPU")
+
     for data_format in ["NCHW", "NHWC"]:
       for test_input in [True, False]:
         self.ConstructAndTestGradient(
@@ -1370,8 +1373,13 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
             max_err=0.005)
 
   @test_util.deprecated_graph_mode_only
-  @test_util.run_cuda_only
+  @test.disable_with_predicate(
+      pred=test.is_built_with_rocm,
+      skip_message='MIOpen does not support group conv yet!')
   def testFilterGradientGroupConv(self):
+    if not test.is_gpu_available():
+        self.skipTest("Test requires GPU")
+
     for data_format in ["NCHW", "NHWC"]:
       for test_input in [True, False]:
         self.ConstructAndTestGradient(
@@ -1408,8 +1416,8 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
                                  use_gpu,
                                  err,
                                  dilations=(1, 1)):
-    if use_gpu and not test.is_gpu_available(cuda_only=True):
-      return
+    #if use_gpu and not test.is_gpu_available(cuda_only=True):
+    #  return
     x1 = self._CreateNumpyTensor(filter_sizes)
     x2 = self._CreateNumpyTensor(output_sizes)
     dilations = list(dilations)
@@ -1894,7 +1902,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2D2x2Depth3ValidBackpropFilterStride1x1Dilation2x1(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropFilterDilation(
             input_sizes=[1, 3, 6, 1],
@@ -1909,7 +1917,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2D2x2Depth1ValidBackpropFilterDilation1x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropFilterDilation(
             input_sizes=[1, 2, 3, 1],
@@ -1924,7 +1932,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2DEmptyBackpropFilterDilation1x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropFilterDilation(
             input_sizes=[1, 2, 3, 1],
@@ -1939,7 +1947,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2D2x2Depth3ValidBackpropFilterDilation2x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropFilterDilation(
             input_sizes=[1, 3, 4, 3],
@@ -1954,7 +1962,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2DKernelSizeMatchesInputSizeBackpropFilterDilation2x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropFilterDilation(
             input_sizes=[1, 3, 3, 1],
@@ -1969,7 +1977,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2D2x2Depth3ValidBackpropInputStride1x1Dilation2x1(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropInputDilation(
             input_sizes=[1, 3, 6, 1],
@@ -1984,7 +1992,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2D2x2Depth1ValidBackpropInputDilation1x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropInputDilation(
             input_sizes=[1, 2, 3, 1],
@@ -1999,7 +2007,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2DEmptyBackpropInputDilation1x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropInputDilation(
             input_sizes=[0, 2, 3, 1],
@@ -2014,7 +2022,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2D2x2Depth3ValidBackpropInputDilation2x1(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         # The GPU version of this test is not very stable. So adjusting the
         # error threshold to 1e-4.
@@ -2031,7 +2039,7 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
 
   @test_util.deprecated_graph_mode_only
   def testConv2DKernelSizeMatchesInputSizeBackpropInputDilation2x2(self):
-    if test.is_gpu_available(cuda_only=True) or test_util.IsMklEnabled():
+    if test.is_gpu_available() or test_util.IsMklEnabled():
       for (data_format, use_gpu) in GetTestConfigs():
         self._RunAndVerifyBackpropInputDilation(
             input_sizes=[1, 3, 3, 1],
@@ -2054,8 +2062,6 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
                                                 use_gpu,
                                                 dilations=(1, 1),
                                                 err=2e-5):
-    if use_gpu and not test.is_gpu_available(cuda_only=True):
-      return
     if not use_gpu and dilations != (1, 1):
       return  # Non-default dilations is currently not supported on the CPU.
 
@@ -2216,8 +2222,6 @@ class Conv2DTest(parameterized.TestCase, test.TestCase):
                                                  use_gpu,
                                                  dilations=(1, 1),
                                                  err=1e-5):
-    if use_gpu and not test.is_gpu_available(cuda_only=True):
-      return
     if not use_gpu and dilations != (1, 1):
       return  # Non-default dilations is currently not supported on the CPU.
 
@@ -3513,7 +3517,6 @@ class DeepConv2DTest(test.TestCase):
 
   def testConv2D3x3FilterStride1x1Same(self):
     self._RunTestCases([1, 1], "SAME")
-
 
 class Conv2DBenchmark(test.Benchmark):
 

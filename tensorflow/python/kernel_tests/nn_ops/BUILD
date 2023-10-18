@@ -294,7 +294,6 @@ cuda_py_strict_test(
     shard_count = 4,
     tags = [
         "no_mac_arm64",
-		"no_rocm",
         "optonly",  # times out
     ],
     deps = [
@@ -437,7 +436,6 @@ cuda_py_strict_test(
     size = "medium",  # http://b/30603882
     timeout = "long",
     srcs = ["depthwise_conv_op_d9m_test.py"],
-    tags = ["no_rocm"],
     shard_count = 8,
     deps = [
         ":depthwise_conv_op_base",

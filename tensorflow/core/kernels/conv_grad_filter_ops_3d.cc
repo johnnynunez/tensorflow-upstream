@@ -998,11 +998,10 @@ struct LaunchConvBackpropFilterOp<Eigen::bfloat16> {
                        const std::vector<int32>& dilation,
                        const std::vector<int32>& stride, const Padding& padding,
                        Tensor* filter_backprop, TensorFormat data_format) {
-      // Performant bfloat16 operations are supported for Ampere+ GPUs. For
-      // pre-Ampere GPUs, we cast inputs to float and outputs back to bfloat16.
+      
       auto* stream = ctx->op_device_context()->stream();
-      const bool cast_to_float = !stream->GetCudaComputeCapability().IsAtLeast(
-          se::CudaComputeCapability::AMPERE);
+
+      const bool cast_to_float = IsBF16NotSupportedInOps(stream);
 
       if (cast_to_float) {
       Tensor casted_input = input;
