@@ -1465,7 +1465,7 @@ GpuDriver::GraphNodeGetType(hipGraphNode_t node) {
   hipDeviceProp_t props;
   hipError_t result = wrap::hipGetDeviceProperties(&props, device);
   if (result == hipSuccess) {
-    *version = props.gcnArch;
+    *version = props.gcnArchName;
     return tsl::OkStatus();
   }
   *version = 0;
