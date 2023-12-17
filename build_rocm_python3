@@ -30,7 +30,7 @@ shift "$((OPTIND-1))"
 nightly=true
 
 # First positional argument (if any) specifies the ROCM_INSTALL_DIR
-ROCM_INSTALL_DIR=/opt/rocm-5.7.0
+ROCM_INSTALL_DIR=/opt/rocm-6.0.0
 if [[ -n $1 ]]; then
     ROCM_INSTALL_DIR=$1
 fi
@@ -56,6 +56,7 @@ PYTHON_VERSION=`python3 -c "import sys;print(f'{sys.version_info.major}.{sys.ver
 export TF_PYTHON_VERSION=$PYTHON_VERSION
 yes "" | TF_NEED_CLANG=0 ROCM_PATH=$ROCM_INSTALL_DIR TF_NEED_ROCM=1 PYTHON_BIN_PATH=/usr/bin/python3 ./configure
 # Explicitly define resource constraints on bazel to avoid overload on rocm-ci
+# Change this fox example with 32GB RAM, put local ram around 24000, and with 7950x3d put 16 and 32
 if [[ -n $restriction ]]; then
     RESOURCE_OPTION="--local_ram_resources=60000 --local_cpu_resources=35 --jobs=70"
 else
